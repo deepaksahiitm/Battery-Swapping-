@@ -1,0 +1,305 @@
+#include <LiquidCrystal.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <MFRC522.h>
+#define SS_PIN 53
+#define RST_PIN 9
+#define lock3 5 //define green LED pin
+#define lock2 4 //define red LED
+#define BUZZER 2 //buzzer pin
+#define lock 3
+#define led1 6
+#define led2 7
+#define led3 8
+#define led4 10
+char Incoming_value = 0; 
+MFRC522 mfrc522(SS_PIN, RST_PIN);
+// initialize the library by associating any needed LCD interface pin
+// with the arduino pin number it is connected to
+const int  rs = A3, en = A5, d4 = A9, d5 = A10, d6 = A11, d7 = A12;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+void setup() {
+  Serial.begin(9600);   // Initiate a serial communication
+  SPI.begin();      // Initiate  SPI bus
+  mfrc522.PCD_Init();
+ pinMode(A14,OUTPUT);
+ pinMode(A13,OUTPUT);
+  pinMode(A4,OUTPUT);
+  pinMode(A0,OUTPUT);
+  pinMode(A2,OUTPUT);
+  pinMode(A1,OUTPUT);
+   pinMode(6,OUTPUT);
+  pinMode(7,OUTPUT);
+  pinMode(8,OUTPUT);
+  pinMode(10,OUTPUT);
+  pinMode(12,OUTPUT);
+  
+ digitalWrite(A14,LOW); 
+ digitalWrite(A13,HIGH); 
+  digitalWrite(A4,LOW); 
+  digitalWrite(A0,LOW);
+  digitalWrite(A2,LOW);
+  digitalWrite(lock,HIGH);
+  digitalWrite(lock2,HIGH);
+  digitalWrite(A1,HIGH);
+  pinMode(lock, OUTPUT);
+  pinMode(lock2, OUTPUT);
+  pinMode(lock3,OUTPUT);
+  pinMode(BUZZER, OUTPUT);
+  digitalWrite(7,LOW); 
+ digitalWrite(6,LOW);
+ digitalWrite(8,LOW); 
+ digitalWrite(10,LOW);
+ 
+  noTone(BUZZER);
+  
+  
+ lcd.begin(20, 2);
+ // Print a message to the LCD.
+ lcd.print("Welcome to EGrow!");
+ Serial.println("Place your card on reader...");
+  Serial.println();
+  lcd.clear();
+  lcd.setCursor(0,0); // column, row
+  lcd.print("ELECTRON ENERGY"); 
+  lcd.setCursor(0,1); // column, row
+  lcd.print("  Scan your Card  ");
+}
+void loop() {
+  
+  
+  // Look for new cards
+  if ( ! mfrc522.PICC_IsNewCardPresent()) 
+    {
+    return;
+    }
+  // Select one of the cards
+  if ( ! mfrc522.PICC_ReadCardSerial()) 
+    {
+    return;
+    }
+  //Show UID on serial monitor
+  Serial.print("UID tag :");
+  String content= "";
+  byte letter;
+  for (byte i = 0; i < mfrc522.uid.size; i++) 
+    {
+     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+     Serial.print(mfrc522.uid.uidByte[i], HEX);
+     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+     content.concat(String(mfrc522.uid.uidByte[i], HEX));
+    }
+  Serial.println();
+  Serial.print("Message : ");
+  content.toUpperCase();
+
+ if(Serial.available() > 0)  
+  {
+    Incoming_value = Serial.read();      //Read the incoming data and store it into variable Incoming_value
+    Serial.print(Incoming_value);        //Print Value of Incoming_value in Serial monitor
+    Serial.print("\n");        //New line 
+    if(Incoming_value == '1')            //Checks whether value of Incoming_value is equal to 1 
+      digitalWrite(3, LOW);  //If value is 1 then LED turns ON
+    else if(Incoming_value == '0')       //Checks whether value of Incoming_value is equal to 0
+      digitalWrite(3, HIGH); //If value is 0 then LED turns OFF
+    else if(Incoming_value == '3')       //Checks whether value of Incoming_value is equal to 0
+      digitalWrite(4, LOW);  
+    else if(Incoming_value == '4')       //Checks whether value of Incoming_value is equal to 0
+      digitalWrite(4, HIGH);
+  }  
+  
+ if (content.substring(1) == "53 65 D8 A7") //change here the UID of card/cards or tag/tags that you want to give access
+  {
+    lcd.clear();
+    Serial.println("Hi,Deepak.Access Granted");
+    lcd.print("Hello,Deepak");
+    lcd.setCursor(0,1);
+    lcd.print("Access Granted..");
+    digitalWrite(BUZZER,HIGH);
+    digitalWrite(7,HIGH); 
+    digitalWrite(6,HIGH);
+    delay(500);
+    digitalWrite(7,LOW); 
+    digitalWrite(6,LOW);
+    digitalWrite(BUZZER,LOW);
+    
+    Serial.println();
+    delay(1000);
+    lcd.clear();
+   
+    lcd.setCursor(0,0);
+    lcd.print("SWAP YOUR BATTERY");
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 1 OPENED");
+    digitalWrite(lock,LOW);
+    delay(10000);
+    digitalWrite(lock,HIGH);
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 1 CLOSED");
+    delay(500);
+    digitalWrite(lock2,LOW);
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 2 OPENED");
+    delay(10000);
+    digitalWrite(lock2,HIGH);
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 2 Closed");
+    delay(500);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Thanks for Swapping..");
+    lcd.setCursor(0,1);
+    lcd.print("Have a nice Journey..");
+    delay(3000);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("ELECTRON ENERGY");
+    lcd.setCursor(0,1);
+    lcd.print("SCAN, SWAP & GO");
+      
+    }
+  else if (content.substring(1) == "E3 BF E0 AA") //change here the UID of card/cards or tag/tags that you want to give access
+    {
+    lcd.clear();
+    Serial.println("Hi,Avinash.Access Granted");
+    lcd.print("Hello,Avinash");
+    lcd.setCursor(0,1);
+    lcd.print("Access Granted..");
+    digitalWrite(BUZZER,HIGH);
+    digitalWrite(7,HIGH); 
+    digitalWrite(6,HIGH);
+    delay(500);
+    digitalWrite(7,LOW); 
+    digitalWrite(6,LOW);
+    digitalWrite(BUZZER,LOW);
+    
+    Serial.println();
+    delay(500);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("SWAP YOUR BATTERY");
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 1 OPENED");
+    digitalWrite(lock,LOW);
+    
+    delay(10000);
+    digitalWrite(lock,HIGH);
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 1 CLOSED");
+    delay(500);
+    digitalWrite(lock2,LOW);
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 2 OPENED");
+    delay(10000);
+    digitalWrite(lock2,HIGH);
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 2 CLOSED");
+    delay(1000);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Thanks for Swapping..");
+    lcd.setCursor(0,1);
+    lcd.print("Have a nice Journey..");
+    delay(3000);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("ELECTRON ENERGY");
+    lcd.setCursor(0,1);
+    lcd.print("SCAN, SWAP & GO");
+    
+   
+    
+    
+    
+    
+    
+   }
+  else if (content.substring(1) == "03 5C 36 A8") //change here the UID of card/cards or tag/tags that you want to give access
+    {
+    lcd.clear();
+    Serial.println("Hi,ARPIT.Access Granted");
+    lcd.print("Hello,Arpit");
+    lcd.setCursor(0,1);
+    lcd.print("Access Granted..");
+    digitalWrite(BUZZER,HIGH);
+    digitalWrite(7,HIGH); 
+    digitalWrite(6,HIGH);
+    delay(1000);
+    digitalWrite(7,LOW); 
+    digitalWrite(6,LOW);
+    digitalWrite(BUZZER,LOW);
+    
+    Serial.println();
+    delay(500);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("SWAP YOUR BATTERY");
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 1 OPENED");
+    digitalWrite(lock,LOW);
+    delay(10000);
+    digitalWrite(lock,HIGH);
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 1 CLOSED");
+    delay(500);
+    digitalWrite(lock2,LOW);
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 2 OPENED");
+    delay(10000);
+    digitalWrite(lock2,HIGH);
+    lcd.setCursor(0,1);
+    lcd.print("LOCK 2 CLOSED");
+    delay(500);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Thanks for Swapping..");
+    lcd.setCursor(0,1);
+    lcd.print("Have a nice Journey..");
+    delay(3000);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("ELECTRON ENERGY");
+    lcd.setCursor(0,1);
+    lcd.print("SCAN, SWAP & GO");
+     
+    
+    }
+  
+
+   else if(content.substring(1) != "03 5C 36 A8" || content.substring(1) != "53 65 D8 A7" || content.substring(1) != "E3 BF E0 AA")
+    {
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Invalid Card... ");
+    lcd.setCursor(0,1);
+    lcd.print("Access denied..");
+    Serial.println(" Access denied. Scan  Again");
+    digitalWrite(BUZZER,HIGH);
+   
+    delay(300);
+    digitalWrite(8,LOW); 
+    digitalWrite(10,LOW);
+    
+    digitalWrite(BUZZER, LOW);
+    delay(300);
+    digitalWrite(BUZZER,HIGH);
+   
+    delay(300);
+   
+    digitalWrite(BUZZER, LOW);
+    delay(300);
+    digitalWrite(BUZZER,HIGH);
+    
+    delay(300);
+    
+    digitalWrite(BUZZER, LOW);
+    delay(300);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("ELECTRON ENERGY");
+    lcd.setCursor(0,1);
+    lcd.print("SCAN, SWAP & GO");
+   
+    }
+    else delay(200);
+ }
