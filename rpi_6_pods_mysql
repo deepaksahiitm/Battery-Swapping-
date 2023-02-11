@@ -1,0 +1,81 @@
+import RPi.GPIO as GPIO
+import MFRC522
+import mysql.connector
+import time
+
+# Initialize the RFID reader
+MIFAREReader = MFRC522.MFRC522()
+
+# Set the GPIO mode to BOARD
+GPIO.setmode(GPIO.BOARD)
+
+# Define the solenoid lock pins
+lockPins = [11, 12, 13, 15, 16, 18]
+
+# Initialize the solenoid locks
+for pin in lockPins:
+    GPIO.setup(pin, GPIO.OUT)
+    GPIO.output(pin, GPIO.HIGH)
+
+# Connect to the MySQL database
+mydb = mysql.connector.connect(
+    host="127.0. 0.1",
+    user="root",
+    password="12345",
+    database="electica_energy"
+)
+
+# Create a cursor for the database connection
+mycursor = mydb.cursor()
+
+# Main loop for the battery swapping system
+while True:
+    # Scan for RFID cards
+    status, TagType = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
+
+    # Check if a card is found
+    if status == MIFAREReader.MI_OK:
+        # Get the UID of the card
+        (status, uid) = MIFAREReader.MFRC522_Anticoll()
+
+        # Check the database for authorization
+        mycursor.execute("SELECT * FROM users WHERE uid = %s", (str(uid),))
+        result = mycursor.fetchall()
+
+        # Check if the card is authorized
+        if result:
+            # Get the user information from the database
+            user = result[0]
+            pod = user[2]
+
+            # Check if the user is authorized to access an empty pod
+            if pod == -1:
+                # Find an empty pod
+                mycursor.execute("SELECT * FROM pods WHERE status = 0 LIMIT 1")
+                result = mycursor.fetchall()
+
+                # Check if an empty pod is found
+                if result:
+                    # Get the empty pod information
+                    pod = result[0][0]
+
+                    # Unlock the solenoid lock for the empty pod
+                    GPIO.output(lockPins[pod], GPIO.LOW)
+
+                    # Update the database to reflect that the pod is now occupied
+                    mycursor.execute("UPDATE pods SET status = 1 WHERE id = %s", (pod,))
+                    mydb.commit()
+
+                    # Wait for 30 seconds to give the user time to complete the battery swap
+                    time.sleep(30)
+                    # lock the solenoid lock for the empty pod
+                    GPIO.output(lockPins[pod], GPIO.HIGH)
+
+                    # Find a charged pod
+                    mycursor.execute("SELECT * FROM pods WHERE status = 2 LIMIT 1")
+                    result = mycursor.fetchall()
+
+                    # Check if a charged pod is found
+                    if result:
+                        # Get the charged pod information
+                        chargedPod = result[0][0]
